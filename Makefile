@@ -4,7 +4,7 @@ HOST ?= 0.0.0.0
 PORT ?= 8000
 
 run: ## Run the application using uvicorn with provided arguments or defaults
-	uvicorn app:app --host $(HOST) --port $(PORT)
+	uvicorn main:app --host $(HOST) --port $(PORT) --reload --env-file .local.env
 
 install: ## Install a dependency using poetry
 	@echo "Installing dependency $(LIBRARY)"
