@@ -69,7 +69,7 @@ class TaskRepository:
 
     def delete_task(self, task_id: UUID) -> None:
         """Удалить задачу"""
-        with self._session_scope as session:
+        with self._session_scope() as session:
             task: Task = self.get_task_by_id(task_id)
             if task is None:
                 raise ValueError(f"Задача с ID {task_id} не найдена")

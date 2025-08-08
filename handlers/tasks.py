@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 from fastapi import APIRouter, status, Depends
 from repository import TaskRepository
 from schema import TaskCreate, TaskResponse
@@ -33,6 +34,14 @@ async def update_task(
     return task_repository.update_task(task)
 
 
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_task(
+    task_id: UUID,
+    task_repository: Annotated[TaskRepository, Depends(get_tasks_repository)]
+):
+    task_repository.delete_task(task_id)
+
+
 #
 # # @router.put(
 # #     "/{task_id}",
@@ -46,11 +55,4 @@ async def update_task(
 #
 
 
-# @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-# async def delete_task(task_id: int):
-#     for index, task in enumerate(fixture_tasks):
-#         if task["id"] == task_id:
-#             fixture_tasks.pop(index)
-#             return
-#     return {"message": "Task not found"}
-#
+
