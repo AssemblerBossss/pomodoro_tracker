@@ -18,3 +18,9 @@ services:
       POSTGRES_PASSWORD: pomodoro
       POSTGRES_USER: postgres
       POSTGRES_DB: pomodoro
+
+  cache:
+   image: redis:latest
+   restart: always
+   ports:
+     - '14000:6379'
