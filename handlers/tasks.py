@@ -37,7 +37,7 @@ async def update_task(
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
     task_id: UUID,
-    task_repository: Annotated[TaskRepository, Depends(get_tasks_repository)]
+    task_repository: Annotated[TaskRepository, Depends(get_tasks_repository)],
 ):
     task_repository.delete_task(task_id)
 
@@ -53,6 +53,3 @@ async def delete_task(
 # #             return task
 #
 #
-
-
-
