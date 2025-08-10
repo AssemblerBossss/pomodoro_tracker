@@ -1,9 +1,9 @@
 from typing import Annotated
 from uuid import UUID
 from fastapi import APIRouter, status, Depends
-from repository import TaskRepository
+from repository import TaskRepository, TaskCache
 from schema import TaskCreate, TaskResponse
-from dependency import get_tasks_repository
+from dependency import get_tasks_repository, get_cache_tasks_repository
 from schema.task import TaskUpdate
 
 router = APIRouter(prefix="/task", tags=["task"])
@@ -12,8 +12,11 @@ router = APIRouter(prefix="/task", tags=["task"])
 @router.get("/all", response_model=list[TaskResponse])
 async def get_tasks(
     task_repository: Annotated[TaskRepository, Depends(get_tasks_repository)],
+    task_cache: Annotated[TaskCache, Depends(get_cache_tasks_repository)]
 ):
     tasks = task_repository.get_all_tasks()
+    tasks_schema = [TaskResponse.model_validate(task) for task in tasks]
+    task_cache.set_tasks(tasks_schema)
     return tasks
 
 
