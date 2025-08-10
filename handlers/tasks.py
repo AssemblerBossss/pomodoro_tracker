@@ -14,10 +14,13 @@ async def get_tasks(
     task_repository: Annotated[TaskRepository, Depends(get_tasks_repository)],
     task_cache: Annotated[TaskCache, Depends(get_cache_tasks_repository)]
 ):
-    tasks = task_repository.get_all_tasks()
-    tasks_schema = [TaskResponse.model_validate(task) for task in tasks]
-    task_cache.set_tasks(tasks_schema)
-    return tasks
+    if tasks := task_cache.get_tasks():
+        return tasks
+    else:
+        tasks = task_repository.get_all_tasks()
+        tasks_schema = [TaskResponse.model_validate(task) for task in tasks]
+        task_cache.set_tasks(tasks_schema)
+        return tasks
 
 
 @router.post("/", response_model=TaskResponse)
