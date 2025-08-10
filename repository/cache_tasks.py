@@ -1,11 +1,8 @@
-import json
-
 from redis import Redis
-
 from schema import TaskResponse
 
 
-class CacheTasks:
+class TaskCache:
 
     def __init__(self, redis: Redis):
         self.redis = redis
