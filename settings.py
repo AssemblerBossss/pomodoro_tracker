@@ -12,9 +12,7 @@ class Settings(BaseSettings):
     CACHE_HOST: str = "0.0.0.0"
     CACHE_PORT: int = 14000
     CACHE_DB: int = 0
-    SQLALCHEMY_DATABASE_URI: str = (
-        "postgresql+psycopg2://postgres:pomodoro@0.0.0.0:7777/pomodoro"
-    )
+
 
     @property
     def db_url(self) -> str:

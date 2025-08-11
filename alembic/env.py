@@ -26,20 +26,24 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 # Получаем значения из настроек
-DB_LOGIN = settings.DB_LOGIN
-DB_PASS = settings.DB_PASS
-DB_SERVER = settings.DB_SERVER
+DB_HOST = settings.DB_HOST
+DB_PORT = settings.DB_PORT
+DB_USER = settings.DB_USER
 DB_NAME = settings.DB_NAME
+DB_DRIVER = settings.DB_DRIVER
+DB_PASSWORD = settings.DB_PASSWORD
 
 # Устанавливаем значения в конфигурации
 section = config.config_ini_section
+config.set_section_option(section, "DB_HOST", DB_HOST)
+config.set_section_option(section, "DB_PORT", str(DB_PORT))
 config.set_section_option(section, "DB_NAME", DB_NAME)
-config.set_section_option(section, "DB_PASS", DB_PASS)
-config.set_section_option(section, "DB_SERVER", DB_SERVER)
-config.set_section_option(section, "DB_LOGIN", DB_LOGIN)
+config.set_section_option(section, "DB_PASSWORD", DB_PASSWORD)
+config.set_section_option(section, "DB_USER", DB_USER)
+config.set_section_option(section, "DB_DRIVER", DB_DRIVER)
 
 
-config.set_main_option("sqlalchemy.url", f"postgresql://{DB_LOGIN}:{DB_PASS}@{DB_SERVER}/{DB_NAME}")
+config.set_main_option("sqlalchemy.url", f"{DB_DRIVER}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")

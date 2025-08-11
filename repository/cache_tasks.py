@@ -13,21 +13,26 @@ class TaskCache:
     def get_tasks(self) -> list[TaskResponse]:
         with self.redis as redis:
             # Получаем все элементы списка
-            tasks_data = redis.lrange(self.cache_key , 0, -1)
+            tasks_data = redis.lrange(self.cache_key, 0, -1)
             # Декодируем каждый элемент и парсим JSON
-            return [
-                TaskResponse.model_validate(json.loads(task.decode('utf-8')))
-                for task in tasks_data
-            ] if tasks_data else []
+            return (
+                [
+                    TaskResponse.model_validate(json.loads(task.decode("utf-8")))
+                    for task in tasks_data
+                ]
+                if tasks_data
+                else []
+            )
 
     def set_tasks(self, tasks: list[TaskResponse]) -> None:
+        if not tasks:  # Проверка на пустой список
+            self.invalidate_cache()
+            return
+
         tasks_json = [task.model_dump_json() for task in tasks]
         with self.redis as redis:
-            # Удаляем старый список
             redis.delete(self.cache_key)
-            # Добавляем новые задачи
-            redis.rpush(self.cache_key , *tasks_json)
-
+            redis.rpush(self.cache_key, *tasks_json)
             redis.expire(self.cache_key, 300)
 
     def add_task(self, task: TaskResponse) -> None:
