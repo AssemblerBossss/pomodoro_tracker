@@ -20,12 +20,9 @@ async def get_tasks(
 @router.post("/", response_model=TaskResponse)
 async def create_task(
     task: TaskCreate,
-    task_repository: Annotated[TaskRepository, Depends(get_tasks_repository)],
-    task_cache: Annotated[TaskCache, Depends(get_cache_tasks_repository)]
+    task_service: Annotated[TaskService, Depends(get_task_service)]
 ):
-    response_task = task_repository.create_task(task)
-    task_cache.add_task(TaskResponse.model_validate(response_task))
-    return response_task
+    return task_service.create_task(task)
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)
