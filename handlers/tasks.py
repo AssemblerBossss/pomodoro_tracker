@@ -1,10 +1,8 @@
 from typing import Annotated
 from uuid import UUID
 from fastapi import APIRouter, status, Depends
-from repository import TaskRepository, TaskCache
-from schema import TaskCreate, TaskResponse
-from dependency import get_tasks_repository, get_cache_tasks_repository, get_task_service
-from schema.task import TaskUpdate
+from schema import TaskCreate, TaskResponse,  TaskUpdate
+from dependency import get_task_service
 from service import TaskService
 
 router = APIRouter(prefix="/task", tags=["task"])
@@ -39,8 +37,6 @@ async def delete_task(
     task_service: Annotated[TaskService, Depends(get_task_service)]
 ):
     task_service.delete_task(task_id)
-    task_repository.delete_task(task_id)
-    task_cache.invalidate_cache()
 
 
 #
