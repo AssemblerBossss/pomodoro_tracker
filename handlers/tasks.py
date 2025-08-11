@@ -1,31 +1,20 @@
-from time import sleep
 from typing import Annotated
 from uuid import UUID
 from fastapi import APIRouter, status, Depends
 from repository import TaskRepository, TaskCache
 from schema import TaskCreate, TaskResponse
-from dependency import get_tasks_repository, get_cache_tasks_repository
+from dependency import get_tasks_repository, get_cache_tasks_repository, get_task_service
 from schema.task import TaskUpdate
+from service import TaskService
 
 router = APIRouter(prefix="/task", tags=["task"])
 
 
 @router.get("/all", response_model=list[TaskResponse])
 async def get_tasks(
-    task_repository: Annotated[TaskRepository, Depends(get_tasks_repository)],
-    task_cache: Annotated[TaskCache, Depends(get_cache_tasks_repository)]
+    task_service: Annotated[TaskService, Depends(get_task_service)]
 ):
-    cached_tasks = await task_cache.get_tasks()
-
-    if cached_tasks:
-        return cached_tasks
-
-    tasks = task_repository.get_all_tasks()
-    sleep(10)
-    if tasks:
-        tasks_schema = [TaskResponse.model_validate(task) for task in tasks]
-        task_cache.set_tasks(tasks_schema)
-    return tasks
+    return task_service.get_tasks()
 
 
 @router.post("/", response_model=TaskResponse)

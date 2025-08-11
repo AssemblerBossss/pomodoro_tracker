@@ -23,7 +23,7 @@ class TaskCache:
     def set_tasks(self, tasks: list[TaskResponse]) -> None:
         tasks_json = [task.model_dump_json() for task in tasks]
         with self.redis as redis:
-            # Удаляем старый список (опционально)
+            # Удаляем старый список
             redis.delete(self.cache_key)
             # Добавляем новые задачи
             redis.rpush(self.cache_key , *tasks_json)
