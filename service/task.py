@@ -1,36 +1,73 @@
+from typing import List
+from uuid import UUID
 from repository import TaskRepository, TaskCache
-from schema import TaskResponse, TaskCreate
+from schema import TaskResponse, TaskCreate, TaskUpdate
 from dataclasses import dataclass
 
 
 @dataclass
 class TaskService:
+    """Service layer for task operations with Redis caching.
 
-    task_repository : TaskRepository
-    task_cache : TaskCache
+    Coordinates between task repository (database) and task cache (Redis).
+    """
 
-    def get_tasks(self) ->list[TaskResponse] :
-        """
-        Получить все задачи.
+    task_repository: TaskRepository
+    task_cache: TaskCache
 
-        :return:
-            list[TaskResponse]: Список задач из кэша (если есть) или БД
+    def get_tasks(self) -> List[TaskResponse]:
+        """Retrieve all tasks from cache or database.
+
+        Returns cached tasks if available, otherwise fetches from database,
+        updates cache, and returns the results.
+
+        Returns:
+            List[TaskResponse]: List of all tasks
         """
         if cached := self.task_cache.get_tasks():
             return cached
 
-        tasks = [TaskResponse.model_validate(t) for t in self.task_repository.get_all_tasks()]
+        tasks = [
+            TaskResponse.model_validate(t) for t in self.task_repository.get_all_tasks()
+        ]
         self.task_cache.set_tasks(tasks)
         return tasks
 
     def create_task(self, task: TaskCreate) -> TaskResponse:
-        """
-        Создать новую задачу.
+        """Create a new task and add it to cache.
 
-        :param task: (TaskCreate): Данные для создания задачи
-        :return TaskResponse: Созданная задача (добавляется в кэш)
+        Args:
+            task (TaskCreate): Data for new task creation
+
+        Returns:
+            TaskResponse: Newly created task
         """
         task = self.task_repository.create_task(task)
         response_task = TaskResponse.model_validate(task)
-        self.task_cache.add_task(TaskResponse.model_validate(response_task))
+        self.task_cache.add_task(response_task)
         return response_task
+
+    def update_task(self, task_update: TaskUpdate) -> TaskResponse:
+        """Update an existing task.
+
+        Args:
+            task_update (TaskUpdate): Task update data
+
+        Returns:
+            TaskResponse: Updated task
+
+        Raises:
+            FileNotFoundError: If task with given ID doesn't exist
+        """
+        task = self.task_repository.get_task_by_id(task_update.task_id)
+        if not task:
+            raise FileNotFoundError(f"Task {task_update.task_id} not found")
+
+        updated_task = self.task_repository.update_task(task_update)
+        self.task_cache.invalidate_cache()
+        return TaskResponse.model_validate(updated_task)
+
+    def delete_task(self, task_id: UUID) -> None:
+
+        self.task_repository.delete_task(task_id)
+        self.task_cache.invalidate_cache()

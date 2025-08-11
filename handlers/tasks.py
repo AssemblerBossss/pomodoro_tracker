@@ -28,17 +28,17 @@ async def create_task(
 @router.patch("/{task_id}", response_model=TaskResponse)
 async def update_task(
     task: TaskUpdate,
-    task_repository: Annotated[TaskRepository, Depends(get_tasks_repository)],
+    task_service: Annotated[TaskService, Depends(get_task_service)]
 ):
-    return task_repository.update_task(task)
+    return task_service.update_task(task)
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
     task_id: UUID,
-    task_repository: Annotated[TaskRepository, Depends(get_tasks_repository)],
-    task_cache: Annotated[TaskCache, Depends(get_cache_tasks_repository)]
+    task_service: Annotated[TaskService, Depends(get_task_service)]
 ):
+    task_service.delete_task(task_id)
     task_repository.delete_task(task_id)
     task_cache.invalidate_cache()
 
