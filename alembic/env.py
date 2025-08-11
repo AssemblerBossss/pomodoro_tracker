@@ -6,6 +6,9 @@ from sqlalchemy import pool
 from alembic import context
 
 from database import Base
+from settings import Settings
+
+settings = Settings()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -22,6 +25,21 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 
+# Получаем значения из настроек
+DB_LOGIN = settings.DB_LOGIN
+DB_PASS = settings.DB_PASS
+DB_SERVER = settings.DB_SERVER
+DB_NAME = settings.DB_NAME
+
+# Устанавливаем значения в конфигурации
+section = config.config_ini_section
+config.set_section_option(section, "DB_NAME", DB_NAME)
+config.set_section_option(section, "DB_PASS", DB_PASS)
+config.set_section_option(section, "DB_SERVER", DB_SERVER)
+config.set_section_option(section, "DB_LOGIN", DB_LOGIN)
+
+
+config.set_main_option("sqlalchemy.url", f"postgresql://{DB_LOGIN}:{DB_PASS}@{DB_SERVER}/{DB_NAME}")
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
