@@ -1,12 +1,11 @@
+from sqlalchemy import String, ForeignKey, Integer
+from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID
 from typing import Optional
 from uuid import uuid4
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, Integer
-from database.database import engine
+
 
 Base = declarative_base()
-
 
 class Category(Base):
     __tablename__ = "Categories"

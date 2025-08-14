@@ -3,9 +3,9 @@ from uuid import UUID
 from sqlalchemy import select, update
 from typing import Any, Optional
 from sqlalchemy.orm import Session
-from database import Task, Category, get_db_session
-from schema import TaskCreate
-from schema.task import TaskUpdate
+from database import get_db_session
+from schema import TaskCreate, TaskUpdate
+from models import Task, Category
 
 
 class TaskRepository:
