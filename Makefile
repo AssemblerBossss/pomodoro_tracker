@@ -16,7 +16,7 @@ uninstall: ## Uninstall a dependency using poetry
 	poetry remove $(LIBRARY)
 
 migrate-create:
-	alembic revivsion -- autogenerate -m $(MIGRATION)
+	alembic revision --autogenerate -m $(MIGRATION)
 
 migrate-apply:
 	alembic upgrade head
