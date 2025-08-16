@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     CACHE_PORT: int = 14000
     CACHE_DB: int = 0
 
+    JWT_SECRET: str = "secret"
+    JWT_ALGORITHM: str = "HS256"
+
     @property
     def db_url(self) -> str:
         return f"{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

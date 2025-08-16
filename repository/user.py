@@ -29,15 +29,15 @@ class UserRepository:
         finally:
             session.close()
 
-    def create_user(self, username: str, password: str, access_token) -> UserProfile:
+    def create_user(self, username: str, password: str) -> UserProfile:
         """Добавить пользователя и вернуть объект UserProfile с присвоенным ID"""
         with self._session_scope() as session:
             user_model = UserProfile(
-                user_name=username, password=password, access_token=access_token
+                user_name=username, password=password
             )
             session.add(user_model)
             session.flush()  # Получаем ID без коммита
-            return user_model  # session_scope сам сделает коммит при выходе
+            return user_model  #
 
     def get_user_by_id(self, user_id: UUID) -> UserProfile | None:
         with self._session_scope() as session:

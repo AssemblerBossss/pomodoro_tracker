@@ -1,8 +1,8 @@
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
-
+from typing import Optional
 
 from models import Base
 
@@ -15,4 +15,3 @@ class UserProfile(Base):
     )
     user_name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
-    access_token: Mapped[str] = mapped_column(String(255), nullable=False)
