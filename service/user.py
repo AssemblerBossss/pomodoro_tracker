@@ -18,4 +18,4 @@ class UserService:
 
     @staticmethod
     def _generate_access_token() -> str:
-        return ''.join(choices(string.ascii_uppercase + string.digits) for _ in range(10))
+        return ''.join(choices(string.ascii_uppercase + string.digits, k=10))
