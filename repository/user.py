@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update
 from dataclasses import dataclass
@@ -37,7 +39,12 @@ class UserRepository:
             session.flush()  # Получаем ID без коммита
             return user_model  # session_scope сам сделает коммит при выходе
 
-    def get_user(self, user_id) -> UserProfile | None:
+    def get_user_by_id(self, user_id: UUID) -> UserProfile | None:
         with self._session_scope() as session:
             stmt = select(UserProfile).where(UserProfile.user_id == user_id)
+            return session.scalars(stmt).one_or_none()
+
+    def get_user_by_username(self, username: str) -> UserProfile | None:
+        with self._session_scope() as session:
+            stmt = select(UserProfile).where(UserProfile.user_name == username)
             return session.scalars(stmt).one_or_none()
