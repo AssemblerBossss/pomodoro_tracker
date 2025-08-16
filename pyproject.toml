@@ -14,7 +14,7 @@ dependencies = [
     "sqlalchemy (>=2.0.42,<3.0.0)",
     "alembic (>=1.16.4,<2.0.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
-    "redis (>=6.4.0,<7.0.0)"
+    "redis (>=6.4.0,<7.0.0)",
 ]
 
 
@@ -24,4 +24,5 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
+flake8 = "^7.3.0"
 

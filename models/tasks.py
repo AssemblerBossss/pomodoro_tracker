@@ -7,6 +7,7 @@ from uuid import uuid4
 
 Base = declarative_base()
 
+
 class Category(Base):
     __tablename__ = "Categories"
 

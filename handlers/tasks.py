@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 from fastapi import APIRouter, status, Depends
-from schema import TaskCreate, TaskResponse,  TaskUpdate
+from schema import TaskCreate, TaskResponse, TaskUpdate
 from dependency import get_task_service
 from service import TaskService
 
@@ -9,32 +9,27 @@ router = APIRouter(prefix="/task", tags=["task"])
 
 
 @router.get("/all", response_model=list[TaskResponse])
-async def get_tasks(
-    task_service: Annotated[TaskService, Depends(get_task_service)]
-):
+async def get_tasks(task_service: Annotated[TaskService, Depends(get_task_service)]):
     return task_service.get_tasks()
 
 
 @router.post("/", response_model=TaskResponse)
 async def create_task(
-    task: TaskCreate,
-    task_service: Annotated[TaskService, Depends(get_task_service)]
+    task: TaskCreate, task_service: Annotated[TaskService, Depends(get_task_service)]
 ):
     return task_service.create_task(task)
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)
 async def update_task(
-    task: TaskUpdate,
-    task_service: Annotated[TaskService, Depends(get_task_service)]
+    task: TaskUpdate, task_service: Annotated[TaskService, Depends(get_task_service)]
 ):
     return task_service.update_task(task)
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
-    task_id: UUID,
-    task_service: Annotated[TaskService, Depends(get_task_service)]
+    task_id: UUID, task_service: Annotated[TaskService, Depends(get_task_service)]
 ):
     task_service.delete_task(task_id)
 
