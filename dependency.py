@@ -1,4 +1,6 @@
-from fastapi import Depends
+from fastapi import Depends, Security
+from fastapi.security import HTTPBearer, http
+from uuid import UUID
 from sqlalchemy.orm import Session
 
 from database import get_db_session
@@ -42,3 +44,12 @@ def get_user_service(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> UserService:
     return UserService(user_repository=user_repository, auth_service=auth_service)
+
+reusable_oauth2 = HTTPBearer()
+
+def get_request_user_id(
+    auth_service: AuthService = Depends(get_auth_service),
+    token: http.HTTPAuthorizationCredentials = Security(reusable_oauth2)
+    ) -> UUID:
+    user_id = auth_service.get_user_id_from_access_token(token.credentials)
+    return user_id

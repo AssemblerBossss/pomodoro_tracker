@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import UUID
-
 from jose import jwt
 
 from exception import UserNotFoundException, UserUnCorrectPasswordException
@@ -9,6 +8,7 @@ from models import UserProfile
 from repository import UserRepository
 from schema import UserLoginSchema
 from settings import Settings
+
 
 @dataclass
 class AuthService:
@@ -58,10 +58,16 @@ class AuthService:
         }
 
         return jwt.encode(
-            encode,
-            self.settings.JWT_SECRET,
-            algorithm=self.settings.JWT_ALGORITHM
+            encode, self.settings.JWT_SECRET, algorithm=self.settings.JWT_ALGORITHM
         )
+
+    def get_user_id_from_access_token(self, access_token: str) -> UUID:
+        payload = jwt.decode(
+            access_token=access_token,
+            key=self.settings.JWT_SECRET,
+            algorithms=self.settings.JWT_ALGORITHM,
+        )
+        return payload["user_id"]
 
     @staticmethod
     def _validate_user(user: UserProfile, password: str) -> None:

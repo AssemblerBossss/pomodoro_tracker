@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 from fastapi import APIRouter, status, Depends
 from schema import TaskCreate, TaskResponse, TaskUpdate
-from dependency import get_task_service
+from dependency import get_task_service, get_request_user_id
 from service import TaskService
 
 router = APIRouter(prefix="/task", tags=["task"])
@@ -15,7 +15,9 @@ async def get_tasks(task_service: Annotated[TaskService, Depends(get_task_servic
 
 @router.post("/", response_model=TaskResponse)
 async def create_task(
-    task: TaskCreate, task_service: Annotated[TaskService, Depends(get_task_service)]
+    task: TaskCreate,
+    task_service: Annotated[TaskService, Depends(get_task_service)],
+    user_id: UUID = Depends(get_request_user_id)
 ):
     return task_service.create_task(task)
 
