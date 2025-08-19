@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from uuid import UUID
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from typing import Any, Optional
 from sqlalchemy.orm import Session
 from database import get_db_session
@@ -71,13 +71,13 @@ class TaskRepository:
             session.flush()
             return task_model.task_id
 
-    def delete_task(self, task_id: UUID) -> None:
+    def delete_task(self, task_id: UUID, user_id: UUID) -> None:
         """Удалить задачу"""
         with self._session_scope() as session:
-            task: Task = self.get_task_by_id(task_id)
-            if task is None:
-                raise ValueError(f"Задача с ID {task_id} не найдена")
-            session.delete(task)
+            stmt = delete(Task).where(
+                Task.task_id == task_id, Task.user_id == user_id
+            )
+            session.execute(stmt)
 
     def update_task(self, task_update: TaskUpdate) -> Task:
         """Обновляет задачу по ID"""

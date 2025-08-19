@@ -23,5 +23,5 @@ class TaskResponse(TaskBase):
         from_attributes = True
 
 
-class TaskUpdate(TaskResponse):
-    pass
+class TaskUpdate(TaskBase):
+    task_id: UUID

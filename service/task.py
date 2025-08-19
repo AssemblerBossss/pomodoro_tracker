@@ -74,14 +74,15 @@ class TaskService:
         self.task_cache.invalidate_cache()
         return TaskResponse.model_validate(updated_task)
 
-    def delete_task(self, task_id: UUID) -> None:
+    def delete_task(self, task_id: UUID, user_id: UUID) -> None:
         """Delete task.
 
         Args:
-            task_id (UUID): Task update data
+            task_id (UUID): Task ID
+            user_id (UUID): User ID
         """
-        task = self.task_repository.get_task_by_id(task_id=task_id)
+        task = self.task_repository.get_user_task(task_id=task_id, user_id=user_id)
         if not task:
-            raise FileNotFoundError(f"Task with {task_id} not found")
-        self.task_repository.delete_task(task_id)
+            raise TaskNotFoundException
+        self.task_repository.delete_task(task_id=task_id, user_id=user_id)
         self.task_cache.invalidate_cache()
