@@ -55,17 +55,18 @@ class TaskRepository:
         with self._session_scope() as session:
             return session.scalars(select(Task)).all()
 
-    def create_task(self, task: TaskCreate) -> Task:
+    def create_task(self, task: TaskCreate, user_id: UUID) -> UUID:
         """Добавить задачу и вернуть объект Task с присвоенным ID"""
         with self._session_scope() as session:
             task_model = Task(
                 name=task.name,
                 pomodoro_count=task.pomodoro_count,
                 category_id=task.category_id,
+                user_id=user_id,
             )
             session.add(task_model)
-            session.flush()  # Получаем ID без коммита
-            return task_model  # session_scope сам сделает коммит при выходе
+            session.flush()
+            return task_model.task_id
 
     def delete_task(self, task_id: UUID) -> None:
         """Удалить задачу"""

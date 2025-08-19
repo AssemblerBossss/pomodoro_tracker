@@ -19,7 +19,7 @@ async def create_task(
     task_service: Annotated[TaskService, Depends(get_task_service)],
     user_id: UUID = Depends(get_request_user_id)
 ):
-    return task_service.create_task(task)
+    return task_service.create_task(task, user_id)
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)

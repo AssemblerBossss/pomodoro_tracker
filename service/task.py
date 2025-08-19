@@ -33,16 +33,18 @@ class TaskService:
         self.task_cache.set_tasks(tasks)
         return tasks
 
-    def create_task(self, task: TaskCreate) -> TaskResponse:
+    def create_task(self, task: TaskCreate, user_id: UUID) -> TaskResponse:
         """Create a new task and add it to cache.
 
         Args:
             task (TaskCreate): Data for new task creation
+            user_id (UUID): User ID
 
         Returns:
             TaskResponse: Newly created task
         """
-        task = self.task_repository.create_task(task)
+        task_id: UUID = self.task_repository.create_task(task, user_id)
+        task = self.task_repository.get_task_by_id(task_id)
         response_task = TaskResponse.model_validate(task)
         self.task_cache.add_task(response_task)
         return response_task
