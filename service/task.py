@@ -4,6 +4,8 @@ from repository import TaskRepository, TaskCache
 from schema import TaskResponse, TaskCreate, TaskUpdate
 from dataclasses import dataclass
 
+from exception import TaskNotFoundException
+
 
 @dataclass
 class TaskService:
@@ -49,21 +51,24 @@ class TaskService:
         self.task_cache.add_task(response_task)
         return response_task
 
-    def update_task(self, task_update: TaskUpdate) -> TaskResponse:
+    def update_task(self, task_update: TaskUpdate, user_id: UUID) -> TaskResponse:
         """Update an existing task.
 
         Args:
             task_update (TaskUpdate): Task update data
+            user_id (UUID): User ID
 
         Returns:
             TaskResponse: Updated task
 
         Raises:
-            FileNotFoundError: If task with given ID doesn't exist
+            TaskNotFoundException: If task with given ID doesn't exist
         """
-        task = self.task_repository.get_task_by_id(task_update.task_id)
+        task = self.task_repository.get_user_task(
+            task_id=task_update.task_id, user_id=user_id
+        )
         if not task:
-            raise FileNotFoundError(f"Task {task_update.task_id} not found")
+            raise TaskNotFoundException
 
         updated_task = self.task_repository.update_task(task_update)
         self.task_cache.invalidate_cache()

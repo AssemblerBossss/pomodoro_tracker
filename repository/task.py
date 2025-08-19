@@ -41,6 +41,9 @@ class TaskRepository:
         """Получить задачу по имени"""
         return self._get_task(Task.name == name)
 
+    def get_user_task(self, task_id: UUID, user_id: UUID) -> Optional[Task]:
+        return self._get_task(Task.task_id == task_id, Task.user_id == user_id)
+
     def get_tasks_by_category(self, category_name: str) -> list[Task]:
         """Получить список задач по названию категории."""
         with self._session_scope() as session:

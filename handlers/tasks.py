@@ -17,16 +17,18 @@ async def get_tasks(task_service: Annotated[TaskService, Depends(get_task_servic
 async def create_task(
     task: TaskCreate,
     task_service: Annotated[TaskService, Depends(get_task_service)],
-    user_id: UUID = Depends(get_request_user_id)
+    user_id: UUID = Depends(get_request_user_id),
 ):
     return task_service.create_task(task, user_id)
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)
 async def update_task(
-    task: TaskUpdate, task_service: Annotated[TaskService, Depends(get_task_service)]
+    task: TaskUpdate,
+    task_service: Annotated[TaskService, Depends(get_task_service)],
+    user_id: UUID = Depends(get_request_user_id),
 ):
-    return task_service.update_task(task)
+    return task_service.update_task(task, user_id)
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
