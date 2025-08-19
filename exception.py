@@ -1,6 +1,14 @@
 class UserNotFoundException(Exception):
-    message = "User not found"
+    detail = "User not found"
 
 
 class UserUnCorrectPasswordException(Exception):
-    message = "Wrong password"
+    detail = "Wrong password"
+
+
+class TokenExpiredException(Exception):
+    detail = "Token expired"
+
+
+class InvalidTokenException(Exception):
+    detail = "Invalid token"

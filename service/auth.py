@@ -1,9 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import UUID
-from jose import jwt
+from jose import jwt, JWTError, ExpiredSignatureError
 
-from exception import UserNotFoundException, UserUnCorrectPasswordException
+from exception import (
+    UserNotFoundException,
+    UserUnCorrectPasswordException,
+    TokenExpiredException,
+    InvalidTokenException,
+)
 from models import UserProfile
 from repository import UserRepository
 from schema import UserLoginSchema
@@ -54,7 +59,7 @@ class AuthService:
 
         encode = {
             "user_id": str(user_id),
-            "expire": expires_date_unix,
+            "exp": expires_date_unix,
         }
 
         return jwt.encode(
@@ -62,12 +67,18 @@ class AuthService:
         )
 
     def get_user_id_from_access_token(self, access_token: str) -> UUID:
-        payload = jwt.decode(
-            access_token=access_token,
-            key=self.settings.JWT_SECRET,
-            algorithms=self.settings.JWT_ALGORITHM,
-        )
-        return payload["user_id"]
+        try:
+            payload = jwt.decode(
+                token=access_token,
+                key=self.settings.JWT_SECRET,
+                algorithms=self.settings.JWT_ALGORITHM,
+                options={"verify_exp": True},
+            )
+            return UUID(payload["user_id"])
+        except ExpiredSignatureError:
+            raise TokenExpiredException
+        except JWTError:
+            raise InvalidTokenException
 
     @staticmethod
     def _validate_user(user: UserProfile, password: str) -> None:
