@@ -17,11 +17,14 @@ class TaskService:
     task_repository: TaskRepository
     task_cache: TaskCache
 
-    def get_tasks(self) -> List[TaskResponse]:
-        """Retrieve all tasks from cache or database.
+    def get_user_tasks(self, user_id: UUID) -> List[TaskResponse]:
+        """Extract all user's tasks from the cache or database.
 
         Returns cached tasks if available, otherwise fetches from database,
         updates cache, and returns the results.
+
+        Args:
+            user_id (UUID): User ID
 
         Returns:
             List[TaskResponse]: List of all tasks
@@ -30,7 +33,7 @@ class TaskService:
             return cached
 
         tasks = [
-            TaskResponse.model_validate(t) for t in self.task_repository.get_all_tasks()
+            TaskResponse.model_validate(t) for t in self.task_repository.get_user_tasks(user_id)
         ]
         self.task_cache.set_tasks(tasks)
         return tasks

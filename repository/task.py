@@ -72,12 +72,28 @@ class TaskRepository:
 
         Args:
             task_id: UUID of the task to find
-            user_id: UUID of the task owner
+            user_id: ID of the user
 
         Returns:
             Optional[Task]: Task object if found and belongs to user, None otherwise
         """
         return self._get_task(Task.task_id == task_id, Task.user_id == user_id)
+
+    def get_user_tasks(self, user_id: UUID) -> list[Task]:
+        """Retrieve all users tasks from the database.
+
+        Args:
+            user_id: ID of the user
+
+        Returns:
+            list[Task]: List of all tasks
+        """
+        with self._session_scope() as session:
+            stmt = (
+                select(Task)
+                .where(Task.user_id == user_id)
+            )
+            return session.scalars(stmt).all()
 
     def get_tasks_by_category(self, category_name: str) -> list[Task]:
         """Retrieve all tasks belonging to a specific category.
@@ -95,15 +111,6 @@ class TaskRepository:
                 .where(Category.name == category_name)
             )
             return session.scalars(stmt).all()
-
-    def get_all_tasks(self) -> list[Task]:
-        """Retrieve all tasks from the database.
-
-        Returns:
-            list[Task]: List of all tasks
-        """
-        with self._session_scope() as session:
-            return session.scalars(select(Task)).all()
 
     def create_task(self, task: TaskCreate, user_id: UUID) -> UUID:
         """Retrieve all tasks from the database.

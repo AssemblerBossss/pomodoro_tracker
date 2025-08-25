@@ -11,8 +11,11 @@ router = APIRouter(prefix="/task", tags=["task"])
 
 
 @router.get("/all", response_model=list[TaskResponse])
-async def get_tasks(task_service: Annotated[TaskService, Depends(get_task_service)]):
-    return task_service.get_tasks()
+async def get_tasks(
+    task_service: Annotated[TaskService, Depends(get_task_service)],
+    user_id: UUID = Depends(get_request_user_id)
+):
+    return task_service.get_user_tasks(user_id)
 
 
 @router.post("/", response_model=TaskResponse)
