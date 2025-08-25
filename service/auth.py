@@ -67,6 +67,21 @@ class AuthService:
         )
 
     def get_user_id_from_access_token(self, access_token: str) -> UUID:
+        """Extracts and validates user ID from JWT access token.
+
+        Decodes the JWT token using the application's secret key and algorithm,
+        verifies token expiration, and extracts the user ID from the payload.
+
+        Args:
+            access_token: JWT access token string
+
+        Returns:
+            UUID: User ID extracted from the token payload
+
+        Raises:
+            TokenExpiredException: If the token has expired
+            InvalidTokenException: If the token is invalid, malformed, or signature verification fails
+        """
         try:
             payload = jwt.decode(
                 token=access_token,
