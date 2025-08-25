@@ -29,13 +29,14 @@ class TaskService:
         Returns:
             List[TaskResponse]: List of all tasks
         """
-        if cached := self.task_cache.get_tasks():
+        if cached := self.task_cache.get_user_tasks(user_id):
             return cached
 
         tasks = [
-            TaskResponse.model_validate(t) for t in self.task_repository.get_user_tasks(user_id)
+            TaskResponse.model_validate(t)
+            for t in self.task_repository.get_user_tasks(user_id)
         ]
-        self.task_cache.set_tasks(tasks)
+        self.task_cache.set_users_task(user_id=user_id, tasks=tasks)
         return tasks
 
     def create_task(self, task: TaskCreate, user_id: UUID) -> TaskResponse:
@@ -51,7 +52,7 @@ class TaskService:
         task_id: UUID = self.task_repository.create_task(task, user_id)
         task = self.task_repository.get_task_by_id(task_id)
         response_task = TaskResponse.model_validate(task)
-        self.task_cache.add_task(response_task)
+        self.task_cache.add_task(user_id=user_id, task=response_task)
         return response_task
 
     def update_task(self, task_update: TaskUpdate, user_id: UUID) -> TaskResponse:
@@ -74,7 +75,7 @@ class TaskService:
             raise TaskNotFoundException
 
         updated_task = self.task_repository.update_task(task_update)
-        self.task_cache.invalidate_cache()
+        self.task_cache.invalidate_user_cache(user_id=user_id)
         return TaskResponse.model_validate(updated_task)
 
     def delete_task(self, task_id: UUID, user_id: UUID) -> None:
@@ -88,4 +89,4 @@ class TaskService:
         if not task:
             raise TaskNotFoundException
         self.task_repository.delete_task(task_id=task_id, user_id=user_id)
-        self.task_cache.invalidate_cache()
+        self.task_cache.invalidate_user_cache(user_id=user_id)
