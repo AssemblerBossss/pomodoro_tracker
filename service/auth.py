@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from uuid import UUID
 from jose import jwt, JWTError, ExpiredSignatureError
 
+from client.google_client import GoogleClient
 from exception import (
     UserNotFoundException,
     UserUnCorrectPasswordException,
@@ -26,6 +27,14 @@ class AuthService:
 
     user_repository: UserRepository
     settings: Settings
+    google_client: GoogleClient
+
+    def google_auth(self, code: str):
+        user_data = self.google_client.get_user_info(code=code)
+        print(user_data)
+
+    def get_google_redirect_url(self):
+        return self.settings.google_redirect_url
 
     def login(self, username: str, password: str) -> UserLoginSchema:
         """Authenticate user and return access token.
