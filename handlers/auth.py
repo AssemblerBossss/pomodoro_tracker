@@ -34,9 +34,10 @@ async def google_login(
         auth_service: Annotated[AuthService, Depends(get_auth_service)]
 ):
     redirect_url = auth_service.get_google_redirect_url()
+    print(redirect_url)
     return RedirectResponse(redirect_url)
 
-@router.get("/auth/google")
+@router.get("/google")
 async def google_login(
         auth_service: Annotated[AuthService, Depends(get_auth_service)],
         code: str

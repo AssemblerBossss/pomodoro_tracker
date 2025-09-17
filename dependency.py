@@ -2,7 +2,8 @@ from fastapi import HTTPException, status
 from fastapi import Depends, Security
 from fastapi.security import HTTPBearer, http
 from uuid import UUID
-from sqlalchemy.orm import Session
+
+from client import GoogleClient
 from exception import TokenExpiredException, InvalidTokenException
 from repository import TaskRepository, TaskCache, UserRepository
 from cache import get_redis_connection
@@ -58,18 +59,36 @@ def get_user_repository() -> UserRepository:
     return UserRepository()
 
 
+def get_google_client() -> GoogleClient:
+    """
+    Retrieves an instance of the Google client configured with application settings.
+
+    Returns:
+        GoogleClient: An instance of Google client for OAuth authentication and
+        user information retrieval from Google APIs.
+    """
+    return GoogleClient(settings=Settings())
+
+
 def get_auth_service(
     user_repository: UserRepository = Depends(get_user_repository),
+    google_client: GoogleClient = Depends(get_google_client),
 ) -> AuthService:
     """
     Retrieves an instance of the authentication service.
     Args:
         user_repository (User Repository, optional): The user repository. Defaults to the result of
             the get_user_repository function.
+        google_client (GoogleClient, optional):
     Returns:
         AuthService: An instance of the authentication service.
+
     """
-    return AuthService(user_repository=user_repository, settings=Settings())
+    return AuthService(
+        user_repository=user_repository,
+        settings=Settings(),
+        google_client=google_client,
+    )
 
 
 def get_user_service(
@@ -110,8 +129,7 @@ def get_request_user_id(
     """
     if not token or not token.credentials:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid token."
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid token."
         )
     try:
         user_id = auth_service.get_user_id_from_access_token(token.credentials)
