@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
@@ -12,5 +14,9 @@ class UserProfile(Base):
     user_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid4
     )
-    user_name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    password: Mapped[str] = mapped_column(String(255), nullable=False)
+    username: Mapped[str] = mapped_column(String(255), nullable=True, unique=True)
+    password: Mapped[str] = mapped_column(String(255), nullable=True)
+    google_access_token: Mapped[Optional[str]]
+    yandex_access_token: Mapped[Optional[str]]
+    email: Mapped[Optional[str]]
+    name: Mapped[Optional[str]]

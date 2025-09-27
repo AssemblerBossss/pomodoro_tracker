@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from os import access
 from uuid import UUID
 from jose import jwt, JWTError, ExpiredSignatureError
 
@@ -12,7 +13,7 @@ from exception import (
 )
 from models import UserProfile
 from repository import UserRepository
-from schema import UserLoginSchema
+from schema import UserLoginSchema, GoogleUserData, UserCreateSchema
 from settings import Settings
 
 
@@ -30,8 +31,22 @@ class AuthService:
     google_client: GoogleClient
 
     def google_auth(self, code: str):
-        user_data = self.google_client.get_user_info(code=code)
-        print(user_data)
+        user_data: GoogleUserData = self.google_client.get_user_info(code=code)
+
+        if user := self.user_repository.get_google_user(google_token=user_data.access_token):
+            access_token = self.generate_access_token(user_id=user.user_id)
+            print("User google login")
+            return UserLoginSchema(user_id=user.user_id, access_token=access_token)
+
+        create_user_data = UserCreateSchema(
+            google_access_token=user_data.access_token,
+            email=user_data.email,
+            name=user_data.name,
+        )
+        created_user = self.user_repository.create_user(create_user_data)
+        access_token = self.generate_access_token(user_id=created_user.user_id)
+        print("User google created")
+        return UserLoginSchema(user_id=created_user.user_id, access_token=access_token)
 
     def get_google_redirect_url(self):
         return self.settings.google_redirect_url

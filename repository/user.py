@@ -7,6 +7,7 @@ from contextlib import contextmanager
 
 from models import UserProfile
 from database import get_db_session
+from schema import UserCreateSchema
 
 
 @dataclass
@@ -29,15 +30,13 @@ class UserRepository:
         finally:
             session.close()
 
-    def create_user(self, username: str, password: str) -> UserProfile:
+    def create_user(self, user: UserCreateSchema) -> UserProfile:
         """Добавить пользователя и вернуть объект UserProfile с присвоенным ID"""
         with self._session_scope() as session:
-            user_model = UserProfile(
-                user_name=username, password=password
-            )
+            user_model = UserProfile(**user.model_dump())
             session.add(user_model)
-            session.flush()  # Получаем ID без коммита
-            return user_model  #
+            session.flush()
+            return user_model
 
     def get_user_by_id(self, user_id: UUID) -> UserProfile | None:
         with self._session_scope() as session:
@@ -47,4 +46,11 @@ class UserRepository:
     def get_user_by_username(self, username: str) -> UserProfile | None:
         with self._session_scope() as session:
             stmt = select(UserProfile).where(UserProfile.user_name == username)
+            return session.scalars(stmt).one_or_none()
+
+    def get_google_user(self, google_token: str) -> UserProfile | None:
+        with self._session_scope() as session:
+            stmt = select(UserProfile).where(
+                UserProfile.google_access_token == google_token
+            )
             return session.scalars(stmt).one_or_none()
