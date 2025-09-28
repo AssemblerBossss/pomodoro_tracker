@@ -4,6 +4,8 @@ from repository import TaskRepository, TaskCache
 from schema import TaskResponse, TaskCreate, TaskUpdate
 from dataclasses import dataclass
 
+from exception import TaskNotFoundException
+
 
 @dataclass
 class TaskService:
@@ -15,66 +17,76 @@ class TaskService:
     task_repository: TaskRepository
     task_cache: TaskCache
 
-    def get_tasks(self) -> List[TaskResponse]:
-        """Retrieve all tasks from cache or database.
+    def get_user_tasks(self, user_id: UUID) -> List[TaskResponse]:
+        """Extract all user's tasks from the cache or database.
 
         Returns cached tasks if available, otherwise fetches from database,
         updates cache, and returns the results.
 
+        Args:
+            user_id (UUID): User ID
+
         Returns:
             List[TaskResponse]: List of all tasks
         """
-        if cached := self.task_cache.get_tasks():
+        if cached := self.task_cache.get_user_tasks(user_id):
             return cached
 
         tasks = [
-            TaskResponse.model_validate(t) for t in self.task_repository.get_all_tasks()
+            TaskResponse.model_validate(t)
+            for t in self.task_repository.get_user_tasks(user_id)
         ]
-        self.task_cache.set_tasks(tasks)
+        self.task_cache.set_users_task(user_id=user_id, tasks=tasks)
         return tasks
 
-    def create_task(self, task: TaskCreate) -> TaskResponse:
+    def create_task(self, task: TaskCreate, user_id: UUID) -> TaskResponse:
         """Create a new task and add it to cache.
 
         Args:
             task (TaskCreate): Data for new task creation
+            user_id (UUID): User ID
 
         Returns:
             TaskResponse: Newly created task
         """
-        task = self.task_repository.create_task(task)
+        task_id: UUID = self.task_repository.create_task(task, user_id)
+        task = self.task_repository.get_task_by_id(task_id)
         response_task = TaskResponse.model_validate(task)
-        self.task_cache.add_task(response_task)
+        self.task_cache.add_task(user_id=user_id, task=response_task)
         return response_task
 
-    def update_task(self, task_update: TaskUpdate) -> TaskResponse:
+    def update_task(self, task_update: TaskUpdate, user_id: UUID) -> TaskResponse:
         """Update an existing task.
 
         Args:
             task_update (TaskUpdate): Task update data
+            user_id (UUID): User ID
 
         Returns:
             TaskResponse: Updated task
 
         Raises:
-            FileNotFoundError: If task with given ID doesn't exist
+            TaskNotFoundException: If task with given ID doesn't exist
         """
-        task = self.task_repository.get_task_by_id(task_update.task_id)
+        task = self.task_repository.get_user_task(
+            task_id=task_update.task_id, user_id=user_id
+        )
         if not task:
-            raise FileNotFoundError(f"Task {task_update.task_id} not found")
+            raise TaskNotFoundException
 
         updated_task = self.task_repository.update_task(task_update)
-        self.task_cache.invalidate_cache()
+        self.task_cache.invalidate_user_cache(user_id=user_id)
         return TaskResponse.model_validate(updated_task)
 
-    def delete_task(self, task_id: UUID) -> None:
+    def delete_task(self, task_id: UUID, user_id: UUID) -> None:
         """Delete task.
 
         Args:
-            task_id (UUID): Task update data
+            task_id (UUID): Task ID
+            user_id (UUID): User ID
         """
-        task = self.task_repository.get_task_by_id(task_id=task_id)
+        task = self.task_repository.get_user_task(task_id=task_id, user_id=user_id)
         if not task:
-            raise FileNotFoundError(f"Task with {task_id} not found")
-        self.task_repository.delete_task(task_id)
-        self.task_cache.invalidate_cache()
+            raise TaskNotFoundException
+        self.task_repository.delete_task(task_id=task_id, user_id=user_id)
+        self.task_cache.invalidate_user_cache(user_id=user_id)

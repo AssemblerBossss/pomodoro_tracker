@@ -17,10 +17,11 @@ class TaskCreate(TaskBase):
 
 class TaskResponse(TaskBase):
     task_id: UUID
+    user_id: UUID
 
     class Config:
         from_attributes = True
 
 
-class TaskUpdate(TaskResponse):
-    pass
+class TaskUpdate(TaskBase):
+    task_id: UUID
