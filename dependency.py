@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 from fastapi import Depends, Security
 from fastapi.security import HTTPBearer, http
 from uuid import UUID
+import httpx
 
 from client import GoogleClient
 from exception import TokenExpiredException, InvalidTokenException
@@ -59,7 +60,13 @@ def get_user_repository() -> UserRepository:
     return UserRepository()
 
 
-def get_google_client() -> GoogleClient:
+async def get_async_client() -> httpx.AsyncClient:
+    return httpx.AsyncClient()
+
+
+def get_google_client(
+    async_client: httpx.AsyncClient = Depends(get_async_client),
+) -> GoogleClient:
     """
     Retrieves an instance of the Google client configured with application settings.
 
@@ -67,7 +74,7 @@ def get_google_client() -> GoogleClient:
         GoogleClient: An instance of Google client for OAuth authentication and
         user information retrieval from Google APIs.
     """
-    return GoogleClient(settings=Settings())
+    return GoogleClient(settings=Settings(), async_client=async_client)
 
 
 def get_auth_service(
