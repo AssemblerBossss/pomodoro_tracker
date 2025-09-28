@@ -33,14 +33,16 @@ async def ping_app():
 async def google_login(
         auth_service: Annotated[AuthService, Depends(get_auth_service)]
 ):
+    """Redirect to Google OAuth"""
     redirect_url = auth_service.get_google_redirect_url()
     print(redirect_url)
     return RedirectResponse(redirect_url)
 
 @router.get("/google")
-async def google_login(
+async def google_callback(
         auth_service: Annotated[AuthService, Depends(get_auth_service)],
         code: str
 ):
-    return auth_service.google_auth(code=code)
+    """Handle Google OAuth callback """
+    return await auth_service.google_auth(code=code)
 

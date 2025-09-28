@@ -34,12 +34,12 @@ class TaskService:
 
         tasks = [
             TaskResponse.model_validate(t)
-            for t in self.task_repository.get_user_tasks(user_id)
+            for t in await self.task_repository.get_user_tasks(user_id)
         ]
         await self.task_cache.set_users_task(user_id=user_id, tasks=tasks)
         return tasks
 
-    def create_task(self, task: TaskCreate, user_id: UUID) -> TaskResponse:
+    async def create_task(self, task: TaskCreate, user_id: UUID) -> TaskResponse:
         """Create a new task and add it to cache.
 
         Args:
@@ -49,13 +49,13 @@ class TaskService:
         Returns:
             TaskResponse: Newly created task
         """
-        task_id: UUID = self.task_repository.create_task(task, user_id)
-        task = self.task_repository.get_task_by_id(task_id)
+        task_id: UUID = await self.task_repository.create_task(task, user_id)
+        task = await self.task_repository.get_task_by_id(task_id)
         response_task = TaskResponse.model_validate(task)
-        self.task_cache.add_task(user_id=user_id, task=response_task)
+        await self.task_cache.add_task(user_id=user_id, task=response_task)
         return response_task
 
-    def update_task(self, task_update: TaskUpdate, user_id: UUID) -> TaskResponse:
+    async def update_task(self, task_update: TaskUpdate, user_id: UUID) -> TaskResponse:
         """Update an existing task.
 
         Args:
@@ -74,19 +74,21 @@ class TaskService:
         if not task:
             raise TaskNotFoundException
 
-        updated_task = self.task_repository.update_task(task_update)
-        self.task_cache.invalidate_user_cache(user_id=user_id)
+        updated_task = await self.task_repository.update_task(task_update)
+        await self.task_cache.invalidate_user_cache(user_id=user_id)
         return TaskResponse.model_validate(updated_task)
 
-    def delete_task(self, task_id: UUID, user_id: UUID) -> None:
+    async def delete_task(self, task_id: UUID, user_id: UUID) -> None:
         """Delete task.
 
         Args:
             task_id (UUID): Task ID
             user_id (UUID): User ID
         """
-        task = self.task_repository.get_user_task(task_id=task_id, user_id=user_id)
+        task = await self.task_repository.get_user_task(
+            task_id=task_id, user_id=user_id
+        )
         if not task:
             raise TaskNotFoundException
-        self.task_repository.delete_task(task_id=task_id, user_id=user_id)
-        self.task_cache.invalidate_user_cache(user_id=user_id)
+        await self.task_repository.delete_task(task_id=task_id, user_id=user_id)
+        await self.task_cache.invalidate_user_cache(user_id=user_id)

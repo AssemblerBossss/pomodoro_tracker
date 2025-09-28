@@ -1,8 +1,9 @@
-from fastapi import HTTPException, status
-from fastapi import Depends, Security
+import httpx
+
+from fastapi import HTTPException, status, Depends, Security
 from fastapi.security import HTTPBearer, http
 from uuid import UUID
-import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from client import GoogleClient
 from exception import TokenExpiredException, InvalidTokenException
@@ -10,6 +11,7 @@ from repository import TaskRepository, TaskCache, UserRepository
 from cache import get_redis_connection
 from service import TaskService, UserService, AuthService
 from settings import Settings
+from database import get_db_session
 
 
 def get_tasks_repository() -> TaskRepository:
@@ -61,7 +63,8 @@ def get_user_repository() -> UserRepository:
 
 
 async def get_async_client() -> httpx.AsyncClient:
-    return httpx.AsyncClient()
+    async with httpx.AsyncClient() as client:
+        yield client
 
 
 def get_google_client(

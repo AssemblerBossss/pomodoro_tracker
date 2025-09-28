@@ -1,56 +1,65 @@
 from uuid import UUID
-
-from sqlalchemy.orm import Session
-from sqlalchemy import select, update
+from contextlib import asynccontextmanager
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update, insert
 from dataclasses import dataclass
-from contextlib import contextmanager
 
 from models import UserProfile
-from database import get_db_session
 from schema import UserCreateSchema
+from database import AsyncSessionFactory
 
 
 @dataclass
 class UserRepository:
+    """Repository for database operations related to users."""
 
     def __init__(self):
-        self.session_factory = get_db_session()
+        self.session_factory = AsyncSessionFactory
 
-    @contextmanager
-    def _session_scope(self) -> Session:
-        """Контекстный менеджер для управления сессией"""
-        session = self.session_factory()
-        session.expire_on_commit = False
-        try:
-            yield session
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            raise e
-        finally:
-            session.close()
+    @asynccontextmanager
+    async def _session_scope(self) -> AsyncSession:
+        """Context manager for handling database sessions.
 
-    def create_user(self, user: UserCreateSchema) -> UserProfile:
+        Provides automatic transaction management with commit/rollback
+        and proper session cleanup.
+        """
+        async with self.session_factory() as session:
+            try:
+                session.expire_on_commit = False
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+    async def create_user(self, user: UserCreateSchema) -> UserProfile:
         """Добавить пользователя и вернуть объект UserProfile с присвоенным ID"""
-        with self._session_scope() as session:
-            user_model = UserProfile(**user.model_dump())
-            session.add(user_model)
-            session.flush()
+        async with self._session_scope() as session:
+            query = (
+                insert(UserProfile)
+                .values(**user.model_dump(exclude_none=True))
+                .returning(UserProfile.user_id)
+            )
+            result = await session.execute(query)
+            user_id: UUID = result.scalar_one()
+
+            stmt = select(UserProfile).where(UserProfile.user_id == user_id)
+            user_model = (await session.execute(stmt)).scalar_one()
             return user_model
 
-    def get_user_by_id(self, user_id: UUID) -> UserProfile | None:
-        with self._session_scope() as session:
+    async def get_user_by_id(self, user_id: UUID) -> UserProfile | None:
+        async with self._session_scope() as session:
             stmt = select(UserProfile).where(UserProfile.user_id == user_id)
-            return session.scalars(stmt).one_or_none()
+            return (await session.scalars(stmt)).one_or_none()
 
-    def get_user_by_username(self, username: str) -> UserProfile | None:
-        with self._session_scope() as session:
-            stmt = select(UserProfile).where(UserProfile.user_name == username)
-            return session.scalars(stmt).one_or_none()
+    async def get_user_by_username(self, username: str) -> UserProfile | None:
+        async with self._session_scope() as session:
+            stmt = select(UserProfile).where(UserProfile.username == username)
+            return (await session.scalars(stmt)).one_or_none()
 
-    def get_google_user(self, google_token: str) -> UserProfile | None:
-        with self._session_scope() as session:
+    async def get_google_user(self, google_token: str) -> UserProfile | None:
+        async with self._session_scope() as session:
             stmt = select(UserProfile).where(
                 UserProfile.google_access_token == google_token
             )
-            return session.scalars(stmt).one_or_none()
+            return (await session.scalars(stmt)).one_or_none()

@@ -1,14 +1,18 @@
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from settings import Settings
 
 settings = Settings()
 
-engine = create_engine(settings.db_url, pool_pre_ping=True)
+engine = create_async_engine(
+    url=settings.db_url, future=True, echo=True, pool_pre_ping=True
+)
 
-Session = sessionmaker(engine)
+AsyncSessionFactory = async_sessionmaker(
+    bind=engine, autoflush=True, expire_on_commit=False
+)
 
 
-def get_db_session() -> Session:
-    return Session
+async def get_db_session() -> AsyncSession:
+    async with AsyncSessionFactory() as async_session:
+        yield async_session

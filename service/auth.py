@@ -30,10 +30,12 @@ class AuthService:
     settings: Settings
     google_client: GoogleClient
 
-    def google_auth(self, code: str):
-        user_data: GoogleUserData = self.google_client.get_user_info(code=code)
+    async def google_auth(self, code: str):
+        user_data: GoogleUserData = await self.google_client.get_user_info(code=code)
 
-        if user := self.user_repository.get_google_user(google_token=user_data.access_token):
+        if user := await self.user_repository.get_google_user(
+            google_token=user_data.access_token
+        ):
             access_token = self.generate_access_token(user_id=user.user_id)
             print("User google login")
             return UserLoginSchema(user_id=user.user_id, access_token=access_token)
@@ -43,7 +45,7 @@ class AuthService:
             email=user_data.email,
             name=user_data.name,
         )
-        created_user = self.user_repository.create_user(create_user_data)
+        created_user = await self.user_repository.create_user(create_user_data)
         access_token = self.generate_access_token(user_id=created_user.user_id)
         print("User google created")
         return UserLoginSchema(user_id=created_user.user_id, access_token=access_token)
@@ -51,7 +53,7 @@ class AuthService:
     def get_google_redirect_url(self):
         return self.settings.google_redirect_url
 
-    def login(self, username: str, password: str) -> UserLoginSchema:
+    async def login(self, username: str, password: str) -> UserLoginSchema:
         """Authenticate user and return access token.
 
         Args:
@@ -65,7 +67,7 @@ class AuthService:
             UserNotFoundException: If user doesn't exist
             UserUnCorrectPasswordException: If password doesn't match
         """
-        user = self.user_repository.get_user_by_username(username)
+        user = await self.user_repository.get_user_by_username(username)
         self._validate_user(user=user, password=password)
         access_token = self.generate_access_token(user_id=user.user_id)
         return UserLoginSchema(user_id=user.user_id, access_token=access_token)
