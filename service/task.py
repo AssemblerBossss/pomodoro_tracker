@@ -68,7 +68,7 @@ class TaskService:
         Raises:
             TaskNotFoundException: If task with given ID doesn't exist
         """
-        task = self.task_repository.get_user_task(
+        task = await self.task_repository.get_user_task(
             task_id=task_update.task_id, user_id=user_id
         )
         if not task:

@@ -33,8 +33,8 @@ class AuthService:
     async def google_auth(self, code: str):
         user_data: GoogleUserData = await self.google_client.get_user_info(code=code)
 
-        if user := await self.user_repository.get_google_user(
-            google_token=user_data.access_token
+        if user := await self.user_repository.get_user_by_email(
+            email=user_data.email
         ):
             access_token = self.generate_access_token(user_id=user.user_id)
             print("User google login")
