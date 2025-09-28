@@ -17,7 +17,7 @@ class TaskService:
     task_repository: TaskRepository
     task_cache: TaskCache
 
-    def get_user_tasks(self, user_id: UUID) -> List[TaskResponse]:
+    async def get_user_tasks(self, user_id: UUID) -> List[TaskResponse]:
         """Extract all user's tasks from the cache or database.
 
         Returns cached tasks if available, otherwise fetches from database,
@@ -29,14 +29,14 @@ class TaskService:
         Returns:
             List[TaskResponse]: List of all tasks
         """
-        if cached := self.task_cache.get_user_tasks(user_id):
+        if cached := await self.task_cache.get_user_tasks(user_id):
             return cached
 
         tasks = [
             TaskResponse.model_validate(t)
             for t in self.task_repository.get_user_tasks(user_id)
         ]
-        self.task_cache.set_users_task(user_id=user_id, tasks=tasks)
+        await self.task_cache.set_users_task(user_id=user_id, tasks=tasks)
         return tasks
 
     def create_task(self, task: TaskCreate, user_id: UUID) -> TaskResponse:
