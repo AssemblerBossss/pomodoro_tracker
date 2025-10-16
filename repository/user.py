@@ -2,7 +2,6 @@ from uuid import UUID
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, insert
-from dataclasses import dataclass
 from typing import Any, Optional
 
 from models import UserProfile
@@ -10,7 +9,6 @@ from schema import UserCreateSchema
 from database import AsyncSessionFactory
 
 
-@dataclass
 class UserRepository:
     """Repository for database operations related to users.
 
@@ -48,18 +46,35 @@ class UserRepository:
         Raises:
             SQLAlchemyError: If database operation fails
         """
+        # async with self._session_scope() as session:
+        #     query = (
+        #         insert(UserProfile)
+        #         .values(**user.model_dump(exclude_none=True))
+        #         .returning(UserProfile.user_id)
+        #     )
+        #     result = await session.execute(query)
+        #     user_id: UUID = result.scalar_one()
+        #
+        #     user_model = await self.get_user_by_id(user_id=user_id)
+        #     return user_model
         async with self._session_scope() as session:
-            query = (
-                insert(UserProfile)
-                .values(**user.model_dump(exclude_none=True))
-                .returning(UserProfile.user_id)
-            )
-            result = await session.execute(query)
-            user_id: UUID = result.scalar_one()
+            try:
+                user_data = user.model_dump(exclude_none=True)
+                stmt = (
+                    insert(UserProfile)
+                    .values(**user_data)
+                    .returning(UserProfile)
+                )
 
-            stmt = select(UserProfile).where(UserProfile.user_id == user_id)
-            user_model = (await session.execute(stmt)).scalar_one()
-            return user_model
+                result = await session.execute(stmt)
+                user_model = result.scalar_one()
+
+                print(f"Created user with ID: {user_model.user_id}")
+                return user_model
+
+            except Exception as e:
+                print(f"Error creating user: {e}")
+                raise
 
     async def _get_user(self, *filters: Any) -> Optional[UserProfile]:
         """Internal method to retrieve a single user matching given filters.
